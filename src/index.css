@@ -10,8 +10,9 @@
     --color-accent: #3b82f6;
     --color-accent-hover: #60a5fa;
 
-    --color-board-light: #e0e0e0;
-    --color-board-dark: #70757a;
+    /* Chess.com default board colors */
+    --color-board-light: #eeeed2;
+    --color-board-dark: #769656;
 }
 
 @layer base {
@@ -58,4 +59,14 @@
 /* Highlight the King in Check */
 .cg-wrap square.check {
     background: rgba(220, 38, 38, 0.8) !important;
+}
+
+/* Chess.com-style green board theme */
+cg-board {
+    background-color: var(--color-board-light) !important;
+    background-image:
+        linear-gradient(90deg, var(--color-board-light) 50%, var(--color-board-dark) 50%),
+        linear-gradient(90deg, var(--color-board-light) 50%, var(--color-board-dark) 50%);
+    background-size: 12.5% 12.5%;
+    background-position: 0 0, 12.5% 12.5%;
 }

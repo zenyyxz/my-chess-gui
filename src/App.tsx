@@ -188,6 +188,7 @@ function App() {
   };
 
   const [activeTab, setActiveTab] = useState<"play" | "library" | "database" | "engines" | "users" | "settings">("play");
+  const [settingsTab, setSettingsTab] = useState<"board" | "analysis" | "theme" | "home" | "privacy">("board");
 
   return (
     <div className="flex w-full h-full bg-[#161616] text-[#f2f2f2]">
@@ -376,45 +377,73 @@ function App() {
               </div>
             </aside>
           ) : (
-            <aside className="flex-1 h-full bg-[#1e1e1e] border-l border-white/5 flex flex-col justify-center items-center p-8 shadow-[-8px_0_24px_rgba(0,0,0,0.2)] z-10 relative overflow-hidden">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-              <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
-                <h2 className="text-3xl font-bold text-white text-center mb-2 tracking-tight">Play Chess</h2>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <button className="flex flex-col items-center justify-center gap-4 bg-[#252525] hover:bg-[#2a2a2a] border border-white/5 p-6 rounded-2xl transition-all hover:border-blue-500/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] group">
-                    <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Bot size={32} />
-                    </div>
-                    <span className="text-white font-semibold">Computer</span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center gap-4 bg-[#252525] hover:bg-[#2a2a2a] border border-white/5 p-6 rounded-2xl transition-all hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] group">
-                    <div className="w-16 h-16 bg-purple-500/10 text-purple-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Users size={32} />
-                    </div>
-                    <span className="text-white font-semibold">Play a Friend</span>
-                  </button>
+            <aside className="flex-1 h-full bg-[#161616] flex flex-col justify-center items-center p-8 z-10 relative overflow-y-auto">
+              <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 relative z-10">
+                {/* Play Chess */}
+                <div className="bg-[#1e1e1e] border border-white/5 rounded-xl p-6 hover:bg-[#252525] transition-colors flex flex-col items-center text-center">
+                  <div className="w-12 h-12 mb-4 text-neutral-300">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-current">
+                      <path d="M16 22H8C7.44772 22 7 21.5523 7 21C7 20.4477 7.44772 20 8 20H16C16.5523 20 17 20.4477 17 21C17 21.5523 16.5523 22 16 22ZM15.5 17C15.5 18.1046 14.6046 19 13.5 19H10.5C9.39543 19 8.5 18.1046 8.5 17L9 11C8.44772 11 8 10.5523 8 10C8 9.44772 8.44772 9 9 9C9.55228 9 10 9.44772 10 10H14C14 9.44772 14.4477 9 15 9C15.5523 9 16 9.44772 16 10C16 10.5523 15.5523 11 15 11L15.5 17ZM12 8C13.1046 8 14 7.10457 14 6C14 4.89543 13.1046 4 12 4C10.8954 4 10 4.89543 10 6C10 7.10457 10.8954 8 12 8ZM12 5C12.5523 5 13 5.44772 13 6C13 6.55228 12.5523 7 12 7C11.4477 7 11 6.55228 11 6C11 5.44772 11.4477 5 12 5Z" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <h3 className="text-[#f2f2f2] font-semibold mb-1">Play Chess</h3>
+                  <p className="text-neutral-500 text-xs flex-1 mb-6">Play against an engine or a friend</p>
+                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Play</button>
                 </div>
 
-                <div className="bg-[#252525] border border-white/5 rounded-2xl p-6 mt-2 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  <div className="flex items-center justify-between mb-5 relative z-10">
-                    <h3 className="text-white font-semibold">Quick Pairing</h3>
-                    <button className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">Custom Time</button>
+                {/* Analysis Board */}
+                <div className="bg-[#1e1e1e] border border-white/5 rounded-xl p-6 hover:bg-[#252525] transition-colors flex flex-col items-center text-center">
+                  <div className="w-12 h-12 mb-4 text-neutral-300">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-current">
+                      <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M4 12H20M12 4V20M8 4V20M16 4V20M4 8H20M4 16H20" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 text-sm relative z-10">
-                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">1 min</button>
-                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">3 min</button>
-                    <button className="py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl font-semibold transition-colors shadow-[0_0_15px_rgba(59,130,246,0.1)]">5 min</button>
-                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">10 min</button>
-                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">15 min</button>
-                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">30 min</button>
-                  </div>
-                  <button className="w-full mt-6 py-3.5 bg-[#1e61d4] hover:bg-[#2568e6] text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-[0.98] relative z-10">
-                    Play Online
-                  </button>
+                  <h3 className="text-[#f2f2f2] font-semibold mb-1">Analysis Board</h3>
+                  <p className="text-neutral-500 text-xs flex-1 mb-6">Analyze a game or position</p>
+                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Open</button>
                 </div>
+
+                {/* New Repertoire */}
+                <div className="bg-[#1e1e1e] border border-white/5 rounded-xl p-6 hover:bg-[#252525] transition-colors flex flex-col items-center text-center">
+                  <div className="w-12 h-12 mb-4 text-neutral-300">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-current">
+                      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
+                      <circle cx="12" cy="12" r="3" fill="currentColor" />
+                      <path d="M12 12L18 6L16 5M18 6L19 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h3 className="text-[#f2f2f2] font-semibold mb-1">New Repertoire</h3>
+                  <p className="text-neutral-500 text-xs flex-1 mb-6">Build and practice your opening repertoire</p>
+                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Create</button>
+                </div>
+
+                {/* Import Game */}
+                <div className="bg-[#1e1e1e] border border-white/5 rounded-xl p-6 hover:bg-[#252525] transition-colors flex flex-col items-center text-center">
+                  <div className="w-12 h-12 mb-4 text-neutral-300">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-current">
+                      <path d="M13 3H8C6.89543 3 6 3.89543 6 5V19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V9L13 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M13 3V9H18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 14H9M12 11V17M12 17L9 14M12 17L15 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h3 className="text-[#f2f2f2] font-semibold mb-1">Import Game</h3>
+                  <p className="text-neutral-500 text-xs flex-1 mb-6">Import a game from a PGN</p>
+                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Import</button>
+                </div>
+
+                {/* Puzzles */}
+                <div className="bg-[#1e1e1e] border border-white/5 rounded-xl p-6 hover:bg-[#252525] transition-colors flex flex-col items-center text-center">
+                  <div className="w-12 h-12 mb-4 text-neutral-300">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-current">
+                      <path d="M10.9997 3C10.9997 4.10457 11.8951 5 12.9997 5C14.1043 5 14.9997 4.10457 14.9997 3C15.6547 3 16.2307 3 16.7324 3C17.8524 3 18.4124 3 18.8402 3.21799C19.2165 3.40973 19.5899 3.78318 19.7817 4.15947C19.9997 4.58728 19.9997 5.14728 19.9997 6.26728V6.26728C19.9997 6.76899 19.9997 7.34499 19.9997 7.99999C20.8407 8.01918 21.6023 8.35626 22.0805 8.9E-05C21.7824 9.17066 21 10.0232 21 11.0822C21 12.1411 21.7824 12.9937 22.0805 13.1643C22.046 13.1835 22.0233 13.1953 22.0007 13.2088C21.5728 13.4682 21.0128 13.4144 19.8928 13.3068C19.4997 13.2689 18.9997 13.2208 18.9997 13.2208V14.2209C18.9997 15.3409 18.9997 15.9009 18.8837 16.3243C18.4716 17.8288 18.3288 17.9716 16.8242 18.3837C16.4009 18.4996 15.8409 18.4996 14.7208 18.4996H12.9997C11.8951 18.4996 10.9997 19.3951 10.9997 20.4996C10.9997 21.6042 10.1043 22.4996 8.99969 22.4996C7.89512 22.4996 6.99969 21.6042 6.99969 20.4996C6.99969 19.3951 6.10426 18.4996 4.99969 18.4996H4.22084C3.10084 18.4996 2.54084 18.4996 2.11749 18.3837C0.612866 17.9716 0.470067 17.8288 0.0579737 16.3243C-0.0579736 15.9009 -0.0579736 15.3409 -0.0579736 14.2209V6.26728C-0.0579736 5.14728 -0.0579736 4.58728 0.159986 4.15947C0.351726 3.78318 0.725176 3.40973 1.10146 3.21799C1.52927 3 2.08927 3 3.20927 3H4.99969C4.99969 4.10457 5.89512 5 6.99969 5C8.10427 5 8.99969 4.10457 8.99969 3H10.9997Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h3 className="text-[#f2f2f2] font-semibold mb-1">Puzzles</h3>
+                  <p className="text-neutral-500 text-xs flex-1 mb-6">Train your chess skills</p>
+                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Train</button>
+                </div>
+
               </div>
             </aside>
           )}
@@ -457,14 +486,91 @@ function App() {
 
       {activeTab === "settings" && (
         <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
-          <div className="flex flex-col items-center justify-center text-center max-w-md z-10">
-            <div className="w-20 h-20 bg-neutral-800 text-neutral-400 rounded-2xl flex items-center justify-center mb-6 border border-white/10 shadow-lg">
-              <Settings size={40} />
+          <div className="w-full max-w-5xl flex flex-col gap-6 z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Settings</h1>
+                <p className="text-neutral-500 text-sm">
+                  Tune how the board looks, how analysis behaves, and how the app feels.
+                </p>
+              </div>
+              <div className="w-14 h-14 bg-neutral-900 text-neutral-400 rounded-2xl flex items-center justify-center border border-white/10 shadow-lg">
+                <Settings size={28} />
+              </div>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-3">Settings</h1>
-            <p className="text-neutral-500 text-sm">
-              Engine depth configuration, custom themes, and sound effects coming soon.
-            </p>
+
+            {/* Settings tabs menu */}
+            <div className="flex flex-wrap gap-2 rounded-xl bg-[#141414] border border-white/5 p-1">
+              {[
+                { id: "board", label: "Board" },
+                { id: "analysis", label: "Analysis" },
+                { id: "theme", label: "Theme" },
+                { id: "home", label: "Home" },
+                { id: "privacy", label: "Privacy" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSettingsTab(tab.id as typeof settingsTab)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    settingsTab === tab.id
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-neutral-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Settings content */}
+            <section className="rounded-2xl bg-[#111111] border border-white/5 p-6 shadow-[0_0_30px_rgba(0,0,0,0.45)]">
+              {settingsTab === "board" && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Board</h2>
+                  <p className="text-sm text-neutral-500">
+                    Configure board orientation, coordinates, move highlights, and animation speed. Actual controls
+                    can plug in here as the next step.
+                  </p>
+                </div>
+              )}
+
+              {settingsTab === "analysis" && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Analysis</h2>
+                  <p className="text-sm text-neutral-500">
+                    Future options for engine depth, multi-PV, and automatic analysis when a game ends.
+                  </p>
+                </div>
+              )}
+
+              {settingsTab === "theme" && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Theme</h2>
+                  <p className="text-sm text-neutral-500">
+                    Switch between light / dark themes, accent colors, and board color presets.
+                  </p>
+                </div>
+              )}
+
+              {settingsTab === "home" && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Home</h2>
+                  <p className="text-sm text-neutral-500">
+                    Control which sections appear on the home screen and what your default action is when the app
+                    launches.
+                  </p>
+                </div>
+              )}
+
+              {settingsTab === "privacy" && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Privacy</h2>
+                  <p className="text-sm text-neutral-500">
+                    Manage telemetry, local data storage, and what is synced with online services.
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
         </main>
       )}
