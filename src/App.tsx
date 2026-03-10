@@ -4,6 +4,7 @@ import { ChessBoard } from "./components/ChessBoard";
 import { Chess } from "chess.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import "chessground/assets/chessground.brown.css"; // Board style
 
 interface HistoryNode {
   fen: string;
