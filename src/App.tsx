@@ -45,33 +45,68 @@ function App() {
     const asyncSetup = async () => {
       unlisten = await listen<string>("engine-output", (event) => {
         const line = event.payload;
-        if (line.startsWith("info depth") && line.includes("score cp")) {
-          const match = line.match(/score cp (-?\d+)/);
-          if (match) {
-            let evalScore = parseInt(match[1], 10) / 100;
-            // Stockfish eval is from engine's POV. If it's black's turn, negate it for absolute white POV
-            // Wait, standard stockfish "score cp" is from the side to move's POV.
-            const wToMove = currentFen.includes(" w ");
-            if (!wToMove) evalScore = -evalScore;
 
-            setEngineEval(evalScore > 0 ? `+${evalScore.toFixed(2)}` : evalScore.toFixed(2));
+        // Use state functional updates to avoid stale closures
+        setHistory((prevHistory) => {
+          // Find the active FEN to evaluate
+          const fen = prevHistory[prevHistory.length - 1].fen;
+
+          if (line.startsWith("info depth") && line.includes("score cp")) {
+            const match = line.match(/score cp (-?\d+)/);
+            if (match) {
+              let evalScore = parseInt(match[1], 10) / 100;
+              const wToMove = fen.includes(" w ");
+              if (!wToMove) evalScore = -evalScore;
+              setEngineEval(evalScore > 0 ? `+${evalScore.toFixed(2)}` : evalScore.toFixed(2));
+            }
+          } else if (line.startsWith("info depth") && line.includes("score mate")) {
+            const match = line.match(/score mate (-?\d+)/);
+            if (match) {
+              let mateIn = parseInt(match[1], 10);
+              const wToMove = fen.includes(" w ");
+              if (!wToMove) mateIn = -mateIn;
+              setEngineEval(mateIn > 0 ? `+M${mateIn}` : `-M${Math.abs(mateIn)}`);
+            }
+          } else if (line.startsWith("bestmove")) {
+            const match = line.split(" ");
+            if (match.length >= 2 && match[1] !== "(none)") {
+              const bestMoveStr = match[1];
+
+              const isBlackTurn = fen.includes(" b ");
+              if (isBlackTurn) {
+                const from = bestMoveStr.substring(0, 2);
+                const to = bestMoveStr.substring(2, 4);
+                const promotion = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : undefined;
+
+                const nextGame = new Chess();
+                if (fen !== "start") nextGame.load(fen);
+
+                const moved = nextGame.move({ from, to, promotion });
+                if (moved) {
+                  // Only push the move if the backend is synced
+                  setHistoryIndex((idx) => {
+                    // We only want to auto-play if the user is viewing the latest board state
+                    if (idx === prevHistory.length - 1) {
+                      return idx + 1;
+                    }
+                    return idx;
+                  });
+                  return [...prevHistory, { fen: nextGame.fen(), move: moved.san }];
+                }
+              }
+            }
           }
-        } else if (line.startsWith("info depth") && line.includes("score mate")) {
-          const match = line.match(/score mate (-?\d+)/);
-          if (match) {
-            let mateIn = parseInt(match[1], 10);
-            const wToMove = currentFen.includes(" w ");
-            if (!wToMove) mateIn = -mateIn;
-            setEngineEval(mateIn > 0 ? `+M${mateIn}` : `-M${Math.abs(mateIn)}`);
-          }
-        }
+          return prevHistory;
+        });
+
       });
     };
     asyncSetup();
     return () => {
       if (unlisten) unlisten();
     };
-  }, [currentFen]);
+  }, []); // Empty deps
+
 
   const toggleEngine = async () => {
     if (isEngineOn) {
@@ -95,6 +130,7 @@ function App() {
     if (isEngineOn) {
       const fenArg = currentFen === "start" ? "startpos" : `fen ${currentFen}`;
       invoke("send_engine_command", { command: `position ${fenArg}` });
+      // If black's turn (engine), go depth 15 as a move, otherwise go depth 15 as eval
       invoke("send_engine_command", { command: "go depth 15" });
     }
   }, [currentFen, isEngineOn]);
@@ -106,11 +142,12 @@ function App() {
     // Determine the SAN (Standard Algebraic Notation) representation the player just played
     const moved = nextGame.move(moveInfo);
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ fen: newFen, move: moved?.san || null });
-
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push({ fen: newFen, move: moved?.san || null });
+      return newHistory;
+    });
+    setHistoryIndex(prev => prev + 1);
   };
 
   const undo = () => {
