@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserProfile } from "../types";
-import { Database, Search, UserCircle, History, Trophy, TrendingUp } from "lucide-react";
+import { Database, Search, UserCircle, History, Trophy, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 
 interface DatabaseTabProps {
     profiles: UserProfile[];
 }
 
+interface UserStats {
+    winRate: number;
+    totalGames: number;
+    currentRating: number;
+}
+
 export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
     const [selectedProfileId, setSelectedProfileId] = useState<string | null>(profiles.length > 0 ? profiles[0].id : null);
+    const [stats, setStats] = useState<UserStats | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     if (profiles.length === 0) {
         return (
@@ -27,6 +36,64 @@ export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
     }
 
     const selectedProfile = profiles.find(p => p.id === selectedProfileId) || profiles[0];
+
+    useEffect(() => {
+        if (!selectedProfile || selectedProfile.website === "local") {
+            setStats(null);
+            setError(null);
+            return;
+        }
+
+        const fetchStats = async () => {
+            setIsLoading(true);
+            setError(null);
+            setStats(null);
+
+            try {
+                if (selectedProfile.website === "lichess") {
+                    const res = await fetch(`https://lichess.org/api/user/${selectedProfile.username}`);
+                    if (!res.ok) throw new Error("Could not fetch Lichess data. Profile may not exist.");
+                    const data = await res.json();
+
+                    let totalGames = data.count?.all || 0;
+                    let wins = data.count?.win || 0;
+                    let winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
+                    let currentRating = data.perfs?.rapid?.rating || data.perfs?.blitz?.rating || 0;
+
+                    setStats({ winRate, totalGames, currentRating });
+                }
+                else if (selectedProfile.website === "chess.com") {
+                    const res = await fetch(`https://api.chess.com/pub/player/${selectedProfile.username}/stats`);
+                    if (!res.ok) throw new Error("Could not fetch Chess.com data. Profile may not exist.");
+                    const data = await res.json();
+
+                    // Try to get rapid stats first, fallback to blitz, then bullet
+                    const perf = data.chess_rapid || data.chess_blitz || data.chess_bullet;
+
+                    if (perf && perf.record) {
+                        let wins = perf.record.win || 0;
+                        let losses = perf.record.loss || 0;
+                        let draws = perf.record.draw || 0;
+                        let totalGames = wins + losses + draws;
+                        let winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
+                        let currentRating = perf.last?.rating || 0;
+
+                        setStats({ winRate, totalGames, currentRating });
+                    } else {
+                        // Fallback if no specific game mode data is found but user exists
+                        setStats({ winRate: 0, totalGames: 0, currentRating: 0 });
+                    }
+                }
+            } catch (err: any) {
+                console.error(err);
+                setError(err.message || "An error occurred fetching user data.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, [selectedProfile]);
 
     return (
         <main className="flex-1 flex bg-[#161616] relative overflow-hidden">
@@ -49,8 +116,8 @@ export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
                             key={profile.id}
                             onClick={() => setSelectedProfileId(profile.id)}
                             className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-2 ${selectedProfileId === profile.id
-                                    ? "bg-blue-500/10 border-blue-500/30 shadow-[0_4px_12px_rgba(59,130,246,0.1)]"
-                                    : "bg-white/5 border-transparent hover:bg-white/10"
+                                ? "bg-blue-500/10 border-blue-500/30 shadow-[0_4px_12px_rgba(59,130,246,0.1)]"
+                                : "bg-white/5 border-transparent hover:bg-white/10"
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -106,57 +173,81 @@ export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
                 {/* Dashboard Grid */}
                 <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
 
-                    {/* Stats Row */}
-                    <div className="grid grid-cols-3 gap-6">
-                        <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
-                            <div className="w-12 h-12 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center">
-                                <Trophy size={24} />
+                    {selectedProfile.website === "local" ? (
+                        <div className="bg-[#1e1e1e] border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center text-center shadow-sm">
+                            <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                                <UserCircle size={24} className="text-neutral-500" />
                             </div>
-                            <div>
-                                <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Win Rate</div>
-                                <div className="text-2xl font-bold text-white">52.4%</div>
-                            </div>
-                        </div>
-                        <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
-                            <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
-                                <History size={24} />
-                            </div>
-                            <div>
-                                <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Total Games</div>
-                                <div className="text-2xl font-bold text-white">1,402</div>
-                            </div>
-                        </div>
-                        <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
-                            <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
-                                <TrendingUp size={24} />
-                            </div>
-                            <div>
-                                <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Current Rating</div>
-                                <div className="text-2xl font-bold text-white">1840</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Games List Placeholder */}
-                    <div className="flex-1 bg-[#1e1e1e] border border-white/5 rounded-2xl flex flex-col overflow-hidden shadow-sm">
-                        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-[#202020]">
-                            <h3 className="font-bold text-white">Recent Games</h3>
-                            <span className="text-xs text-neutral-500">Showing last 10 games</span>
-                        </div>
-
-                        <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
-                                <Database size={24} className="text-neutral-500" />
-                            </div>
-                            <h4 className="text-lg font-bold text-white mb-2">Database Not Synced</h4>
-                            <p className="text-sm text-neutral-400 max-w-sm mb-6">
-                                Games have not been downloaded for this profile yet. Click "Sync" to fetch your game history from {selectedProfile.website}.
+                            <h4 className="text-lg font-bold text-white mb-2">Local Profile</h4>
+                            <p className="text-sm text-neutral-400 max-w-sm">
+                                This is a local profile. Play games against engines to generate local statistics.
                             </p>
-                            <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-500/20">
-                                Sync Database
-                            </button>
                         </div>
-                    </div>
+                    ) : isLoading ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-neutral-500">
+                            <Loader2 className="animate-spin mb-4" size={32} />
+                            <p>Fetching data from {selectedProfile.website}...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-red-400">
+                            <AlertCircle size={32} className="mb-4" />
+                            <p className="font-medium">{error}</p>
+                        </div>
+                    ) : stats ? (
+                        <>
+                            {/* Stats Row */}
+                            <div className="grid grid-cols-3 gap-6">
+                                <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
+                                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center">
+                                        <Trophy size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Win Rate</div>
+                                        <div className="text-2xl font-bold text-white">{stats.winRate.toFixed(1)}%</div>
+                                    </div>
+                                </div>
+                                <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
+                                    <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
+                                        <History size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Total Games</div>
+                                        <div className="text-2xl font-bold text-white">{stats.totalGames.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div className="bg-[#1e1e1e] p-5 rounded-2xl border border-white/5 flex items-center gap-4 shadow-sm">
+                                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                                        <TrendingUp size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Current Rating</div>
+                                        <div className="text-2xl font-bold text-white">{stats.currentRating}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Games List Placeholder */}
+                            <div className="flex-1 bg-[#1e1e1e] border border-white/5 rounded-2xl flex flex-col overflow-hidden shadow-sm">
+                                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-[#202020]">
+                                    <h3 className="font-bold text-white">Recent Games</h3>
+                                    <span className="text-xs text-neutral-500">Showing last 10 games</span>
+                                </div>
+
+                                <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                                        <Database size={24} className="text-neutral-500" />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-white mb-2">Database Not Synced</h4>
+                                    <p className="text-sm text-neutral-400 max-w-sm mb-6">
+                                        Games have not been downloaded for this profile yet. Click "Sync" to fetch your game history from {selectedProfile.website}.
+                                    </p>
+                                    <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-500/20">
+                                        Sync Database
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    ) : null}
 
                 </div>
             </div>
