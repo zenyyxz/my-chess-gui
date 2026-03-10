@@ -30,6 +30,11 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
         }
     }, [fen, cg]);
 
+    const onMoveRef = useRef(onMove);
+    useEffect(() => {
+        onMoveRef.current = onMove;
+    }, [onMove]);
+
     useEffect(() => {
         if (!boardRef.current) return;
 
@@ -55,8 +60,8 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
                         });
 
                         if (move) {
-                            if (onMove) {
-                                onMove({ from: orig, to: dest, promotion: "q" }, game.fen(), game.pgn());
+                            if (onMoveRef.current) {
+                                onMoveRef.current({ from: orig, to: dest, promotion: "q" }, game.fen(), game.pgn());
                             }
                         }
                     } catch (e) {
@@ -76,8 +81,7 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
         return () => {
             cgApi.destroy();
         };
-    }, [orientation, onMove]);
-
+    }, [orientation]); // Remove onMove from dependency array
     // Update movable rules whenever it's our turn
     useEffect(() => {
         if (cg) {
