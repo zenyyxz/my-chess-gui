@@ -14,7 +14,8 @@ pub fn run() {
             greet, 
             engine::start_engine, 
             engine::send_engine_command, 
-            engine::stop_engine
+            engine::stop_engine,
+            engine::download_engine
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { Play, Book, Settings, RotateCcw, ChevronLeft, ChevronRight, FastForward, Cpu } from "lucide-react";
+import { Play, Book, Settings, RotateCcw, ChevronLeft, ChevronRight, FastForward, Cpu, Database } from "lucide-react";
 import { ChessBoard } from "./components/ChessBoard";
 import { EvalBar } from "./components/EvalBar";
+import { EnginesTab } from "./components/EnginesTab";
 import { Chess } from "chess.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -181,7 +182,7 @@ function App() {
     return pairs;
   };
 
-  const [activeTab, setActiveTab] = useState<"play" | "library" | "settings">("play");
+  const [activeTab, setActiveTab] = useState<"play" | "library" | "engines" | "settings">("play");
 
   return (
     <div className="flex w-full h-full bg-[#161616] text-[#f2f2f2]">
@@ -199,6 +200,12 @@ function App() {
             className={`p-3 rounded-xl transition-colors ${activeTab === "library" ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
           >
             <Book size={22} />
+          </button>
+          <button
+            onClick={() => setActiveTab("engines")}
+            className={`p-3 rounded-xl transition-colors ${activeTab === "engines" ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
+          >
+            <Database size={22} />
           </button>
         </div>
         <div className="mt-auto">
@@ -370,6 +377,10 @@ function App() {
             </button>
           </div>
         </main>
+      )}
+
+      {activeTab === "engines" && (
+        <EnginesTab />
       )}
 
       {activeTab === "settings" && (
