@@ -54,3 +54,8 @@
     height: 100vh;
     width: 100vw;
 }
+
+/* Highlight the King in Check */
+.cg-wrap square.check {
+    background: rgba(220, 38, 38, 0.8) !important;
+}

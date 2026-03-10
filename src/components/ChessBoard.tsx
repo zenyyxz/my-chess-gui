@@ -44,6 +44,7 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
             orientation,
             turnColor: game.turn() === "w" ? "white" : "black",
             highlight: { lastMove: true, check: true },
+            check: game.inCheck(),
             movable: {
                 color: orientation,
                 free: false,
@@ -86,8 +87,11 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
     useEffect(() => {
         if (cg) {
             const game = gameRef.current;
+
+            // Update movable rules whenever it's our turn
             cg.set({
                 turnColor: game.turn() === "w" ? "white" : "black",
+                check: game.inCheck(),
                 movable: {
                     color: orientation,
                     dests: toDests(game)
