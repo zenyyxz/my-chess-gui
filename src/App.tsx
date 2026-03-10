@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Play, Book, Settings, RotateCcw, ChevronLeft, ChevronRight, FastForward, Cpu } from "lucide-react";
 import { ChessBoard } from "./components/ChessBoard";
+import { EvalBar } from "./components/EvalBar";
 import { Chess } from "chess.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -217,8 +218,11 @@ function App() {
           </div>
 
           {/* Board Container */}
-          <div className="rounded-md overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10 mx-auto" style={{ width: "min(70vmin, 600px)", height: "min(70vmin, 600px)" }}>
-            <ChessBoard fen={currentFen} onMove={handleMove} orientation="white" />
+          <div className="flex flex-row items-stretch gap-4 mx-auto">
+            <EvalBar evaluation={engineEval} />
+            <div className="rounded-md overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10" style={{ width: "min(70vmin, 600px)", height: "min(70vmin, 600px)" }}>
+              <ChessBoard fen={currentFen} onMove={handleMove} orientation="white" />
+            </div>
           </div>
 
           {/* Player Profile Placeholder */}
