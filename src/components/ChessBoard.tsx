@@ -100,6 +100,21 @@ export function ChessBoard({ fen = "start", onMove, orientation = "white" }: Che
         }
     }, [fen, cg, orientation]);
 
+    // Handle board resizing
+    useEffect(() => {
+        if (!boardRef.current || !cg) return;
+
+        const observer = new ResizeObserver(() => {
+            cg.redrawAll();
+        });
+
+        observer.observe(boardRef.current);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [cg]);
+
     return <div ref={boardRef} className="w-full h-full" />;
 }
 
