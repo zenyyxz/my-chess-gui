@@ -243,7 +243,7 @@ function App() {
             {/* Subtle background glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="flex flex-col gap-4 relative z-10 w-full max-w-[70vmin] lg:max-w-none lg:w-auto">
+            <div className="flex flex-col gap-4 relative z-10 w-full lg:w-auto h-full justify-center max-h-[85vh]">
               {/* Opponent Profile Placeholder */}
               <div className="flex items-center gap-3 px-2">
                 <div className="w-10 h-10 rounded-lg bg-neutral-800 border border-white/5 flex items-center justify-center shadow-lg">
@@ -256,9 +256,9 @@ function App() {
               </div>
 
               {/* Board Container */}
-              <div className="flex flex-row items-stretch gap-4 mx-auto">
+              <div className="flex flex-row items-stretch gap-4 mx-auto flex-1 h-[75vh] min-h-0">
                 <EvalBar evaluation={engineEval} />
-                <div className="rounded-md overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10" style={{ width: "min(70vmin, 600px)", height: "min(70vmin, 600px)" }}>
+                <div className="rounded-md overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10 aspect-square h-full">
                   <ChessBoard fen={currentFen} onMove={handleMove} orientation="white" />
                 </div>
               </div>
@@ -281,99 +281,143 @@ function App() {
           </main>
 
           {/* Right Details Panel */}
-          <aside className="w-[340px] h-full bg-[#1e1e1e] border-l border-white/5 flex flex-col flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.2)] z-10">
-            {/* Engine Eval / Tabs */}
-            <div className="h-14 border-b border-white/5 flex items-center justify-between px-4">
-              <div className="flex gap-6 text-sm font-medium">
-                <button className="text-white relative after:absolute after:bottom-[-16px] after:left-0 after:w-full after:h-[2px] after:bg-blue-500">Game</button>
-                <button className="text-neutral-500 hover:text-neutral-300 transition-colors">Engine</button>
+          {history.length > 1 ? (
+            <aside className="w-[340px] h-full bg-[#1e1e1e] border-l border-white/5 flex flex-col flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.2)] z-10">
+              {/* Engine Eval / Tabs */}
+              <div className="h-14 border-b border-white/5 flex items-center justify-between px-4">
+                <div className="flex gap-6 text-sm font-medium">
+                  <button className="text-white relative after:absolute after:bottom-[-16px] after:left-0 after:w-full after:h-[2px] after:bg-blue-500">Game</button>
+                  <button className="text-neutral-500 hover:text-neutral-300 transition-colors">Engine</button>
+                </div>
+
+                {/* Eval Display & Toggle */}
+                <div className="flex items-center gap-3">
+                  {isEngineOn && (
+                    <span className="text-sm font-mono tracking-tighter font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">{engineEval}</span>
+                  )}
+                  <button
+                    onClick={toggleEngine}
+                    className={`p-1.5 rounded-lg transition-colors ${isEngineOn ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-neutral-400 hover:text-white"}`}
+                  >
+                    <Cpu size={16} />
+                  </button>
+                </div>
               </div>
 
-              {/* Eval Display & Toggle */}
-              <div className="flex items-center gap-3">
-                {isEngineOn && (
-                  <span className="text-sm font-mono tracking-tighter font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">{engineEval}</span>
-                )}
-                <button
-                  onClick={toggleEngine}
-                  className={`p-1.5 rounded-lg transition-colors ${isEngineOn ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-neutral-400 hover:text-white"}`}
-                >
-                  <Cpu size={16} />
-                </button>
-              </div>
-            </div>
+              {/* Move History */}
+              <div className="flex-1 overflow-y-auto p-4 content-start">
+                <div className="grid grid-cols-[3rem_1fr_1fr] gap-x-2 gap-y-1 text-sm">
+                  {renderMovePairs().map((pair) => (
+                    <div key={pair.num} className="contents relative">
+                      <div className="text-neutral-500 py-1 font-mono text-[11px] flex items-center justify-center select-none">{pair.num}</div>
 
-            {/* Move History */}
-            <div className="flex-1 overflow-y-auto p-4 content-start">
-              <div className="grid grid-cols-[3rem_1fr_1fr] gap-x-2 gap-y-1 text-sm">
-                {renderMovePairs().map((pair) => (
-                  <div key={pair.num} className="contents relative">
-                    <div className="text-neutral-500 py-1 font-mono text-[11px] flex items-center justify-center select-none">{pair.num}</div>
-
-                    <div
-                      onClick={() => setHistoryIndex(pair.white.index)}
-                      className={`cursor-pointer rounded px-2 py-1 transition-colors select-none font-medium ${historyIndex === pair.white.index ? 'bg-blue-500/20 border border-blue-500/30 text-blue-300' : 'bg-white/5 hover:bg-white/10 text-neutral-300'}`}
-                    >
-                      {pair.white.move}
-                    </div>
-
-                    {pair.black ? (
                       <div
-                        onClick={() => setHistoryIndex(pair.black!.index)}
-                        className={`cursor-pointer rounded px-2 py-1 transition-colors select-none font-medium ${historyIndex === pair.black.index ? 'bg-blue-500/20 border border-blue-500/30 text-blue-300' : 'hover:bg-white/10 text-neutral-300'}`}
+                        onClick={() => setHistoryIndex(pair.white.index)}
+                        className={`cursor-pointer rounded px-2 py-1 transition-colors select-none font-medium ${historyIndex === pair.white.index ? 'bg-blue-500/20 border border-blue-500/30 text-blue-300' : 'bg-white/5 hover:bg-white/10 text-neutral-300'}`}
                       >
-                        {pair.black.move}
+                        {pair.white.move}
                       </div>
-                    ) : (
-                      <div />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Game Controls */}
-            <div className="p-4 border-t border-white/5 bg-[#1a1a1a]">
-              <div className="flex items-center justify-between mb-4 bg-[#252525] rounded-xl p-1 shadow-inner">
-                <button
-                  onClick={goToStart}
-                  disabled={historyIndex === 0}
-                  className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
-                >
-                  <RotateCcw size={18} />
-                </button>
-                <button
-                  onClick={undo}
-                  disabled={historyIndex === 0}
-                  className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={redo}
-                  disabled={historyIndex === history.length - 1}
-                  className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
-                >
-                  <ChevronRight size={20} />
-                </button>
-                <button
-                  onClick={goToEnd}
-                  disabled={historyIndex === history.length - 1}
-                  className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
-                >
-                  <FastForward size={18} />
-                </button>
+                      {pair.black ? (
+                        <div
+                          onClick={() => setHistoryIndex(pair.black!.index)}
+                          className={`cursor-pointer rounded px-2 py-1 transition-colors select-none font-medium ${historyIndex === pair.black.index ? 'bg-blue-500/20 border border-blue-500/30 text-blue-300' : 'hover:bg-white/10 text-neutral-300'}`}
+                        >
+                          {pair.black.move}
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={reset} className="w-1/3 py-2.5 rounded-lg bg-neutral-800 text-neutral-300 text-sm font-medium hover:bg-neutral-700 transition-colors border border-white/5">
-                  Reset
-                </button>
-                <button className="w-2/3 py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors border border-red-500/20">
-                  Resign
-                </button>
+
+              {/* Game Controls */}
+              <div className="p-4 border-t border-white/5 bg-[#1a1a1a]">
+                <div className="flex items-center justify-between mb-4 bg-[#252525] rounded-xl p-1 shadow-inner">
+                  <button
+                    onClick={goToStart}
+                    disabled={historyIndex === 0}
+                    className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                  >
+                    <RotateCcw size={18} />
+                  </button>
+                  <button
+                    onClick={undo}
+                    disabled={historyIndex === 0}
+                    className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={redo}
+                    disabled={historyIndex === history.length - 1}
+                    className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                  <button
+                    onClick={goToEnd}
+                    disabled={historyIndex === history.length - 1}
+                    className="p-2 w-full flex justify-center text-neutral-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                  >
+                    <FastForward size={18} />
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={reset} className="w-1/3 py-2.5 rounded-lg bg-neutral-800 text-neutral-300 text-sm font-medium hover:bg-neutral-700 transition-colors border border-white/5">
+                    Reset
+                  </button>
+                  <button className="w-2/3 py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors border border-red-500/20">
+                    Resign
+                  </button>
+                </div>
               </div>
-            </div>
-          </aside>
+            </aside>
+          ) : (
+            <aside className="flex-1 h-full bg-[#1e1e1e] border-l border-white/5 flex flex-col justify-center items-center p-8 shadow-[-8px_0_24px_rgba(0,0,0,0.2)] z-10 relative overflow-hidden">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+              <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
+                <h2 className="text-3xl font-bold text-white text-center mb-2 tracking-tight">Play Chess</h2>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button className="flex flex-col items-center justify-center gap-4 bg-[#252525] hover:bg-[#2a2a2a] border border-white/5 p-6 rounded-2xl transition-all hover:border-blue-500/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] group">
+                    <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Bot size={32} />
+                    </div>
+                    <span className="text-white font-semibold">Computer</span>
+                  </button>
+                  <button className="flex flex-col items-center justify-center gap-4 bg-[#252525] hover:bg-[#2a2a2a] border border-white/5 p-6 rounded-2xl transition-all hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] group">
+                    <div className="w-16 h-16 bg-purple-500/10 text-purple-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Users size={32} />
+                    </div>
+                    <span className="text-white font-semibold">Play a Friend</span>
+                  </button>
+                </div>
+
+                <div className="bg-[#252525] border border-white/5 rounded-2xl p-6 mt-2 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  <div className="flex items-center justify-between mb-5 relative z-10">
+                    <h3 className="text-white font-semibold">Quick Pairing</h3>
+                    <button className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">Custom Time</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-sm relative z-10">
+                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">1 min</button>
+                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">3 min</button>
+                    <button className="py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl font-semibold transition-colors shadow-[0_0_15px_rgba(59,130,246,0.1)]">5 min</button>
+                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">10 min</button>
+                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">15 min</button>
+                    <button className="py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-300 font-medium transition-colors hover:text-white">30 min</button>
+                  </div>
+                  <button className="w-full mt-6 py-3.5 bg-[#1e61d4] hover:bg-[#2568e6] text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-[0.98] relative z-10">
+                    Play Online
+                  </button>
+                </div>
+              </div>
+            </aside>
+          )}
         </>
       )}
 
