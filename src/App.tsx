@@ -16,6 +16,8 @@ interface HistoryNode {
   move: string | null;
 }
 
+type ThemeName = "chesscom" | "classicBrown" | "slateBlue";
+
 function App() {
   const [history, setHistory] = useState<HistoryNode[]>([{ fen: "start", move: null }]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -24,6 +26,7 @@ function App() {
   const [engineEval, setEngineEval] = useState<string>("0.00");
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [theme, setTheme] = useState<ThemeName>("chesscom");
 
   const currentFen = history[historyIndex].fen;
 
@@ -189,6 +192,22 @@ function App() {
 
   const [activeTab, setActiveTab] = useState<"play" | "library" | "database" | "engines" | "users" | "settings">("play");
   const [settingsTab, setSettingsTab] = useState<"board" | "analysis" | "theme" | "home" | "privacy">("board");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = (light: string, dark: string) => {
+      root.style.setProperty("--color-board-light", light);
+      root.style.setProperty("--color-board-dark", dark);
+    };
+
+    if (theme === "chesscom") {
+      applyTheme("#eeeed2", "#769656");
+    } else if (theme === "classicBrown") {
+      applyTheme("#f0d9b5", "#b58863");
+    } else if (theme === "slateBlue") {
+      applyTheme("#dbeafe", "#1e3a8a");
+    }
+  }, [theme]);
 
   return (
     <div className="flex w-full h-full bg-[#161616] text-[#f2f2f2]">
@@ -544,11 +563,76 @@ function App() {
               )}
 
               {settingsTab === "theme" && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-white">Theme</h2>
-                  <p className="text-sm text-neutral-500">
-                    Switch between light / dark themes, accent colors, and board color presets.
-                  </p>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Theme</h2>
+                    <p className="text-sm text-neutral-500">
+                      Pick a board color preset. Changes apply instantly to the main board.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      {
+                        id: "chesscom" as ThemeName,
+                        name: "Chess.com",
+                        description: "Classic green & cream board.",
+                        light: "#eeeed2",
+                        dark: "#769656",
+                      },
+                      {
+                        id: "classicBrown" as ThemeName,
+                        name: "Classic Wood",
+                        description: "Warm brown tournament style.",
+                        light: "#f0d9b5",
+                        dark: "#b58863",
+                      },
+                      {
+                        id: "slateBlue" as ThemeName,
+                        name: "Slate Blue",
+                        description: "Cool blue analysis theme.",
+                        light: "#dbeafe",
+                        dark: "#1e3a8a",
+                      },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTheme(t.id)}
+                        className={`group flex flex-col items-stretch rounded-xl border p-3 text-left transition-colors ${
+                          theme === t.id
+                            ? "border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.35)]"
+                            : "border-white/5 bg-[#0b0b0b] hover:border-blue-500/60 hover:bg-[#101827]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="text-sm font-semibold text-white">{t.name}</div>
+                            <div className="text-xs text-neutral-500">{t.description}</div>
+                          </div>
+                          {theme === t.id && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-medium">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <div className="h-16 w-full rounded-lg overflow-hidden border border-white/10 bg-black/40">
+                          <div className="grid grid-cols-4 grid-rows-2 h-full w-full">
+                            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+                              const isDark = (Math.floor(i / 4) + (i % 4)) % 2 === 0;
+                              return (
+                                <div
+                                  key={i}
+                                  style={{ backgroundColor: isDark ? t.dark : t.light }}
+                                  className="w-full h-full"
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
