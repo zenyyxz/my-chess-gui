@@ -1,9 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
-import { Play, Book, Settings, RotateCcw, ChevronLeft, ChevronRight, FastForward, Cpu, Bot, Users } from "lucide-react";
+import { Play, Book, Settings, RotateCcw, ChevronLeft, ChevronRight, FastForward, Cpu, Bot, Users, Database } from "lucide-react";
 import { ChessBoard } from "./components/ChessBoard";
 import { EvalBar } from "./components/EvalBar";
 import { EnginesTab } from "./components/EnginesTab";
 import { UsersTab } from "./components/UsersTab";
+import { DatabaseTab } from "./components/DatabaseTab";
+import { UserProfile } from "./types";
 import { Chess } from "chess.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -20,6 +22,8 @@ function App() {
 
   const [isEngineOn, setIsEngineOn] = useState(false);
   const [engineEval, setEngineEval] = useState<string>("0.00");
+
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
 
   const currentFen = history[historyIndex].fen;
 
@@ -183,7 +187,7 @@ function App() {
     return pairs;
   };
 
-  const [activeTab, setActiveTab] = useState<"play" | "library" | "engines" | "users" | "settings">("play");
+  const [activeTab, setActiveTab] = useState<"play" | "library" | "database" | "engines" | "users" | "settings">("play");
 
   return (
     <div className="flex w-full h-full bg-[#161616] text-[#f2f2f2]">
@@ -201,6 +205,12 @@ function App() {
             className={`p-3 rounded-xl transition-colors ${activeTab === "library" ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
           >
             <Book size={22} />
+          </button>
+          <button
+            onClick={() => setActiveTab("database")}
+            className={`p-3 rounded-xl transition-colors ${activeTab === "database" ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
+          >
+            <Database size={22} />
           </button>
           <button
             onClick={() => setActiveTab("engines")}
@@ -386,12 +396,19 @@ function App() {
         </main>
       )}
 
+      {activeTab === "database" && (
+        <DatabaseTab profiles={profiles} />
+      )}
+
       {activeTab === "engines" && (
         <EnginesTab />
       )}
 
       {activeTab === "users" && (
-        <UsersTab />
+        <UsersTab
+          profiles={profiles}
+          onAddProfile={(profile) => setProfiles(prev => [...prev, { ...profile, id: Date.now().toString() }])}
+        />
       )}
 
       {activeTab === "settings" && (

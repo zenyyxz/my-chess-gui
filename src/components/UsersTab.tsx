@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { Users, X } from "lucide-react";
+import { UserProfile } from "../types";
 
-interface UserProfile {
-    id: string;
-    playerName: string;
-    website: "lichess" | "chess.com" | "local";
-    username: string;
+interface UsersTabProps {
+    profiles: UserProfile[];
+    onAddProfile: (profile: Omit<UserProfile, "id">) => void;
 }
 
-export const UsersTab = () => {
+export const UsersTab = ({ profiles, onAddProfile }: UsersTabProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [profiles, setProfiles] = useState<UserProfile[]>([]);
 
     const handleAddProfile = (profile: Omit<UserProfile, "id">) => {
-        setProfiles(prev => [...prev, { ...profile, id: Date.now().toString() }]);
+        onAddProfile(profile);
         setIsModalOpen(false);
     };
 
@@ -144,8 +142,8 @@ const AddAccountModal = ({ onClose, onAdd }: AddAccountModalProps) => {
                                 type="button"
                                 onClick={() => setWebsite("lichess")}
                                 className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all ${website === "lichess"
-                                        ? "bg-[#252525] border-blue-500"
-                                        : "bg-[#252525] border-transparent hover:bg-[#2a2a2a]"
+                                    ? "bg-[#252525] border-blue-500"
+                                    : "bg-[#252525] border-transparent hover:bg-[#2a2a2a]"
                                     }`}
                             >
                                 {/* Minimalist Horse SVG matching Lichess logo style */}
@@ -160,8 +158,8 @@ const AddAccountModal = ({ onClose, onAdd }: AddAccountModalProps) => {
                                 type="button"
                                 onClick={() => setWebsite("chess.com")}
                                 className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all ${website === "chess.com"
-                                        ? "bg-[#252525] border-blue-500"
-                                        : "bg-[#252525] border-transparent hover:bg-[#2a2a2a]"
+                                    ? "bg-[#252525] border-blue-500"
+                                    : "bg-[#252525] border-transparent hover:bg-[#2a2a2a]"
                                     }`}
                             >
                                 {/* Pawn SVG for Chess.com */}
