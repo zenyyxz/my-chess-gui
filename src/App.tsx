@@ -5,6 +5,7 @@ import { EvalBar } from "./components/EvalBar";
 import { EnginesTab } from "./components/EnginesTab";
 import { UsersTab } from "./components/UsersTab";
 import { DatabaseTab } from "./components/DatabaseTab";
+import { NewGameTab } from "./components/NewGameTab";
 import { UserProfile } from "./types";
 import { Chess } from "chess.js";
 import { invoke } from "@tauri-apps/api/core";
@@ -220,8 +221,24 @@ function App() {
     return pairs;
   };
 
-  const [activeTab, setActiveTab] = useState<"play" | "library" | "database" | "engines" | "users" | "settings">("play");
+  const [activeTab, setActiveTab] = useState<"play" | "new-game" | "library" | "database" | "engines" | "users" | "settings">("play");
   const [settingsTab, setSettingsTab] = useState<"board" | "analysis" | "theme" | "home" | "privacy">("board");
+
+  const [gameConfig, setGameConfig] = useState<any>(null);
+
+  const startNewGame = (config: any) => {
+      setGameConfig(config);
+      reset(); // clear history
+      setActiveTab("play");
+      
+      // If playing an engine, auto-start!
+      // This is a placeholder for where we wire up actual engine play logic
+      if (config.whiteType === "engine" || config.blackType === "engine") {
+         if (!isEngineOn) {
+            toggleEngine();
+         }
+      }
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -240,8 +257,14 @@ function App() {
       <aside className="w-16 h-full bg-[#0f0f0f] flex flex-col items-center py-6 border-r border-white/5 shadow-xl z-20 flex-shrink-0">
         <div className="flex flex-col gap-6 w-full items-center">
           <button
-            onClick={() => setActiveTab("play")}
-            className={`p-3 rounded-xl transition-colors ${activeTab === "play" ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
+            onClick={() => {
+                if (history.length > 1) {
+                   setActiveTab("play");
+                } else {
+                   setActiveTab("new-game");
+                }
+            }}
+            className={`p-3 rounded-xl transition-colors ${(activeTab === "play" || activeTab === "new-game") ? "bg-blue-500/10 text-blue-500" : "text-neutral-400 hover:text-white hover:bg-white/5"}`}
           >
             <Play size={22} />
           </button>
@@ -292,11 +315,13 @@ function App() {
               {/* Opponent Profile Placeholder */}
               <div className="flex items-center gap-3 px-2">
                 <div className="w-10 h-10 rounded-lg bg-neutral-800 border border-white/5 flex items-center justify-center shadow-lg">
-                  <span className="text-neutral-400 font-medium tracking-tighter">OP</span>
+                  <span className="text-neutral-400 font-medium tracking-tighter">
+                     {gameConfig?.blackType === "engine" ? "EN" : "OP"}
+                  </span>
                 </div>
                 <div>
-                  <div className="font-semibold text-sm drop-shadow-sm">Stockfish 18</div>
-                  <div className="text-xs text-neutral-500 font-medium">3200 (Engine)</div>
+                  <div className="font-semibold text-sm drop-shadow-sm">{gameConfig?.blackPlayer || "Stockfish 18"}</div>
+                  <div className="text-xs text-neutral-500 font-medium">3200 {gameConfig?.blackType === "engine" ? "(Engine)" : ""}</div>
                 </div>
               </div>
 
@@ -304,19 +329,19 @@ function App() {
               <div className="flex flex-row items-stretch gap-4 mx-auto flex-1 h-[75vh] min-h-0">
                 <EvalBar evaluation={engineEval} />
                 <div className="rounded-md overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10 aspect-square h-full">
-                  <ChessBoard fen={currentFen} onMove={handleMove} orientation="white" />
+                  <ChessBoard fen={currentFen} onMove={handleMove} orientation={gameConfig?.whiteType === "engine" && gameConfig?.blackType === "human" ? "black" : "white"} />
                 </div>
               </div>
 
               {/* Player Profile Placeholder */}
               <div className="flex items-center gap-3 px-2">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                  <span className="font-medium tracking-tighter">ME</span>
+                   <span className="font-medium tracking-tighter">ME</span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-sm drop-shadow-sm">Player 1</div>
+                  <div className="font-semibold text-sm drop-shadow-sm">{gameConfig?.whitePlayer || "Player 1"}</div>
                   <div className="text-xs text-neutral-400 font-medium flex gap-2">
-                    1500
+                    1500 {gameConfig?.whiteType === "engine" ? "(Engine)" : ""}
                     {gameStatus.isCheckmate && <span className="text-red-400 ml-auto badge font-bold">Checkmate</span>}
                     {gameStatus.isDraw && <span className="text-yellow-400 ml-auto badge font-bold">Draw</span>}
                   </div>
@@ -432,7 +457,7 @@ function App() {
                   </div>
                   <h3 className="text-[#f2f2f2] font-semibold mb-1">Play Chess</h3>
                   <p className="text-neutral-500 text-xs flex-1 mb-6">Play against an engine or a friend</p>
-                  <button className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Play</button>
+                  <button onClick={() => setActiveTab("new-game")} className="w-full py-2 bg-[#2a3645] hover:bg-[#344050] text-[#7392b5] font-semibold rounded-lg transition-colors text-sm">Play</button>
                 </div>
 
                 {/* Analysis Board */}
@@ -511,6 +536,10 @@ function App() {
             </button>
           </div>
         </main>
+      )}
+
+      {activeTab === "new-game" && (
+        <NewGameTab onStartGame={startNewGame} />
       )}
 
       {activeTab === "database" && (
