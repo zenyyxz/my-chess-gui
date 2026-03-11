@@ -16,7 +16,38 @@ interface HistoryNode {
   move: string | null;
 }
 
-type ThemeName = "chesscom" | "classicBrown" | "slateBlue";
+export const BOARD_THEMES = [
+  { id: "dark", name: "Dark", light: "#525252", dark: "#2f2f2f" },
+  { id: "classic_wood", name: "Classic Wood", light: "#f0d9b5", dark: "#b58863" },
+  { id: "glass", name: "Glass", light: "#e0e4e7", dark: "#4f6476" },
+  { id: "brown", name: "Brown", light: "#f1d9b5", dark: "#b58863" },
+  { id: "blue", name: "Blue", light: "#dbeafe", dark: "#1e3a8a" },
+  { id: "newspaper", name: "Newspaper", light: "#E0E0E0", dark: "#9B9B9B" },
+  { id: "walnut", name: "Walnut", light: "#ceae84", dark: "#7b5945" },
+  { id: "sky", name: "Sky", light: "#edf2f6", dark: "#b2cde0" },
+  { id: "stone", name: "Stone", light: "#d6ddec", dark: "#b4c4cb" },
+  { id: "granite", name: "Granite", light: "#8d8d8e", dark: "#4e4e50" },
+  { id: "burnt_wood", name: "Burnt Wood", light: "#f5c7a1", dark: "#cf7640" },
+  { id: "classic_green", name: "Classic Green", light: "#eeeed2", dark: "#769656" },
+  { id: "olive", name: "Olive", light: "#d1d6c5", dark: "#6f7565" },
+  { id: "purple", name: "Purple", light: "#f5f5f5", dark: "#897bb1" },
+  { id: "light_gray", name: "Light Gray", light: "#F0F0F0", dark: "#D1D1D1" },
+  { id: "silver", name: "Silver", light: "#e1e1e1", dark: "#898989" },
+  { id: "tournament", name: "Tournament", light: "#f2f2f2", dark: "#2c6943" },
+  { id: "cherry", name: "Cherry", light: "#D4A559", dark: "#713426" },
+  { id: "red_wood", name: "Red Wood", light: "#e7a870", dark: "#a03c28" },
+  { id: "navy", name: "Navy", light: "#F0EAD6", dark: "#416792" },
+  { id: "pink", name: "Pink", light: "#ffeAEB", dark: "#F6C1C9" },
+  { id: "bases", name: "Bases", light: "#3E3E3E", dark: "#7B3939" },
+  { id: "rust", name: "Rust", light: "#9E9E9E", dark: "#C17937" },
+  { id: "sand", name: "Sand", light: "#e6c99f", dark: "#c79664" },
+  { id: "mustard", name: "Mustard", light: "#FFCE87", dark: "#D58810" },
+  { id: "parchment", name: "Parchment", light: "#EBDDB1", dark: "#BCA371" },
+  { id: "red_cream", name: "Red", light: "#F1D4B8", dark: "#B84A42" },
+  { id: "neon_blue", name: "Neon Blue", light: "#EBF0FF", dark: "#438CFF" },
+  { id: "coral", name: "Coral", light: "#fce5cd", dark: "#cc4125" },
+  { id: "mint", name: "Mint", light: "#d9ead3", dark: "#6aa84f" }
+];
 
 function App() {
   const [history, setHistory] = useState<HistoryNode[]>([{ fen: "start", move: null }]);
@@ -26,7 +57,7 @@ function App() {
   const [engineEval, setEngineEval] = useState<string>("0.00");
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
-  const [theme, setTheme] = useState<ThemeName>("chesscom");
+  const [theme, setTheme] = useState<string>("classic_green");
 
   const currentFen = history[historyIndex].fen;
 
@@ -200,13 +231,8 @@ function App() {
       root.style.setProperty("--color-board-dark", dark);
     };
 
-    if (theme === "chesscom") {
-      applyTheme("#eeeed2", "#769656");
-    } else if (theme === "classicBrown") {
-      applyTheme("#f0d9b5", "#b58863");
-    } else if (theme === "slateBlue") {
-      applyTheme("#dbeafe", "#1e3a8a");
-    }
+    const selectedTheme = BOARD_THEMES.find(t => t.id === theme) || BOARD_THEMES[11]; // classic_green
+    applyTheme(selectedTheme.light, selectedTheme.dark);
   }, [theme]);
 
   return (
@@ -571,67 +597,42 @@ function App() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      {
-                        id: "chesscom" as ThemeName,
-                        name: "Chess.com",
-                        description: "Classic green & cream board.",
-                        light: "#eeeed2",
-                        dark: "#769656",
-                      },
-                      {
-                        id: "classicBrown" as ThemeName,
-                        name: "Classic Wood",
-                        description: "Warm brown tournament style.",
-                        light: "#f0d9b5",
-                        dark: "#b58863",
-                      },
-                      {
-                        id: "slateBlue" as ThemeName,
-                        name: "Slate Blue",
-                        description: "Cool blue analysis theme.",
-                        light: "#dbeafe",
-                        dark: "#1e3a8a",
-                      },
-                    ].map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setTheme(t.id)}
-                        className={`group flex flex-col items-stretch rounded-xl border p-3 text-left transition-colors ${
-                          theme === t.id
-                            ? "border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.35)]"
-                            : "border-white/5 bg-[#0b0b0b] hover:border-blue-500/60 hover:bg-[#101827]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <div className="text-sm font-semibold text-white">{t.name}</div>
-                            <div className="text-xs text-neutral-500">{t.description}</div>
+                  <div className="flex flex-col gap-4">
+                    <h3 className="text-md font-semibold text-white border-b border-white/5 pb-2">Boards</h3>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-3">
+                      {BOARD_THEMES.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setTheme(t.id)}
+                          className={`group relative flex items-center justify-center rounded-lg overflow-hidden transition-all aspect-square border-2 shadow-md ${
+                            theme === t.id
+                              ? "border-[#81b64c] shadow-[0_0_12px_rgba(129,182,76,0.5)]"
+                              : "border-transparent border-white/5 hover:border-white/20"
+                          }`}
+                          title={t.name}
+                        >
+                          <div className="w-full h-full grid grid-cols-2 grid-rows-2 shrink-0">
+                            {/* 2x2 grid representing a board */}
+                            <div style={{ backgroundColor: t.light }} />
+                            <div style={{ backgroundColor: t.dark }} />
+                            <div style={{ backgroundColor: t.dark }} />
+                            <div style={{ backgroundColor: t.light }} />
                           </div>
+
+                          {/* Selected overlay and checkmark */}
                           {theme === t.id && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-medium">
-                              Active
-                            </span>
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                              <div className="w-6 h-6 bg-[#81b64c] rounded-full flex items-center justify-center text-white scale-110 shadow-lg border-2 border-white/10">
+                                <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 ml-[1px]" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </div>
+                            </div>
                           )}
-                        </div>
-                        <div className="h-16 w-full rounded-lg overflow-hidden border border-white/10 bg-black/40">
-                          <div className="grid grid-cols-4 grid-rows-2 h-full w-full">
-                            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-                              const isDark = (Math.floor(i / 4) + (i % 4)) % 2 === 0;
-                              return (
-                                <div
-                                  key={i}
-                                  style={{ backgroundColor: isDark ? t.dark : t.light }}
-                                  className="w-full h-full"
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
