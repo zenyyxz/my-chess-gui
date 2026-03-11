@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Users, X } from "lucide-react";
+import { ChevronLeft, Users, X } from "lucide-react";
 import { UserProfile } from "../types";
 
 interface UsersTabProps {
     profiles: UserProfile[];
     onAddProfile: (profile: Omit<UserProfile, "id">) => void;
+    onBack?: () => void;
 }
 
-export const UsersTab = ({ profiles, onAddProfile }: UsersTabProps) => {
+export const UsersTab = ({ profiles, onAddProfile, onBack }: UsersTabProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleAddProfile = (profile: Omit<UserProfile, "id">) => {
@@ -17,6 +18,11 @@ export const UsersTab = ({ profiles, onAddProfile }: UsersTabProps) => {
 
     return (
         <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden bg-[#161616]">
+            {onBack && (
+                <button onClick={onBack} className="absolute top-8 left-8 flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white z-20 transition-colors">
+                    <ChevronLeft size={16} /> Back to Home
+                </button>
+            )}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
             {profiles.length === 0 ? (

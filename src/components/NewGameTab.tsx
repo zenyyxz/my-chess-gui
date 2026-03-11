@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { User, Cpu, Clock, Settings, Brain } from "lucide-react";
+import { ChevronLeft, User, Cpu, Clock, Settings, Brain } from "lucide-react";
 import { ChessBoard } from "./ChessBoard";
 
 interface NewGameTabProps {
   onStartGame: (config: any) => void;
+  onBack?: () => void;
 }
 
-export const NewGameTab = ({ onStartGame }: NewGameTabProps) => {
+export const NewGameTab = ({ onStartGame, onBack }: NewGameTabProps) => {
   const [whiteType, setWhiteType] = useState<"human" | "engine">("human");
   const [blackType, setBlackType] = useState<"human" | "engine">("engine");
   const [whitePlayer, setWhitePlayer] = useState("Player 1");
-  const [blackPlayer, setBlackPlayer] = useState("Stockfish 18");
+  const [blackPlayer, setBlackPlayer] = useState("Stockfish 16.1");
   
   const [timeControl, setTimeControl] = useState<"time" | "unlimited">("time");
   const [timeMinutes, setTimeMinutes] = useState(3);
@@ -20,10 +21,18 @@ export const NewGameTab = ({ onStartGame }: NewGameTabProps) => {
   const [rightPanelTab, setRightPanelTab] = useState<"config" | "engine">("config");
 
   return (
-    <main className="flex-1 flex flex-row items-stretch p-0 bg-[#0a0a0a] overflow-hidden">
+    <main className="flex-1 flex flex-row items-stretch p-0 bg-[#0a0a0a] overflow-hidden relative">
       
       {/* Left Side: Interactive Board */}
       <div className="flex-1 p-8 flex flex-col items-center justify-center relative min-w-0">
+          {onBack && (
+              <button 
+                  onClick={onBack} 
+                  className="absolute top-8 left-8 flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white z-20 transition-colors bg-[#121212] px-4 py-2 rounded-lg border border-white/5 shadow-md"
+              >
+                  <ChevronLeft size={16} /> Back to Home
+              </button>
+          )}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="w-full max-w-[80vh] aspect-square rounded-md overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 relative z-10 mx-auto">

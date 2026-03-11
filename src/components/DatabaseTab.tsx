@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { UserProfile } from "../types";
-import { Database, Search, UserCircle, History, Trophy, TrendingUp, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, Database, Search, UserCircle, History, Trophy, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 
 interface DatabaseTabProps {
     profiles: UserProfile[];
+    onBack?: () => void;
 }
 
 interface UserStats {
@@ -12,7 +13,7 @@ interface UserStats {
     currentRating: number;
 }
 
-export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
+export const DatabaseTab = ({ profiles, onBack }: DatabaseTabProps) => {
     const [selectedProfileId, setSelectedProfileId] = useState<string | null>(profiles.length > 0 ? profiles[0].id : null);
     const [stats, setStats] = useState<UserStats | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +22,11 @@ export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
     if (profiles.length === 0) {
         return (
             <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden bg-[#161616]">
+                {onBack && (
+                    <button onClick={onBack} className="absolute top-8 left-8 flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white z-20 transition-colors">
+                        <ChevronLeft size={16} /> Back to Home
+                    </button>
+                )}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
                 <div className="flex flex-col items-center justify-center text-center max-w-md z-10">
                     <div className="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
@@ -102,12 +108,19 @@ export const DatabaseTab = ({ profiles }: DatabaseTabProps) => {
 
             {/* Sidebar: Profile List */}
             <aside className="w-[300px] h-full bg-[#111111] border-r border-white/5 flex flex-col z-10 flex-shrink-0">
-                <div className="p-5 border-b border-white/5">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Database size={20} className="text-blue-500" />
-                        Database
-                    </h2>
-                    <p className="text-sm text-neutral-500 mt-1">Select a profile to analyze games.</p>
+                <div className="p-5 border-b border-white/5 flex flex-col items-start gap-4">
+                    {onBack && (
+                        <button onClick={onBack} className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors">
+                            <ChevronLeft size={16} /> Back to Home
+                        </button>
+                    )}
+                    <div>
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Database size={20} className="text-blue-500" />
+                            Database
+                        </h2>
+                        <p className="text-sm text-neutral-500 mt-1">Select a profile to analyze games.</p>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">

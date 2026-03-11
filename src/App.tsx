@@ -156,12 +156,12 @@ function App() {
       setEngineEval("0.00");
     } else {
       try {
-        await invoke("start_engine", { path: "stockfish" });
+        await invoke("start_engine", { path: "stockfish_16_1" });
         await invoke("send_engine_command", { command: "uci" });
         setIsEngineOn(true);
       } catch (e: any) {
         console.error("Failed to start engine:", e);
-        alert(`Could not start Stockfish: ${e}. Is it installed in your PATH?`);
+        alert(`Could not start Stockfish: ${e}. Have you downloaded it from the Engines Tab?`);
       }
     }
   };
@@ -523,6 +523,13 @@ function App() {
         <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
+          <button 
+             onClick={() => setActiveTab("play")} 
+             className="absolute top-8 left-8 flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white z-20 transition-colors"
+          >
+             <ChevronLeft size={16} /> Back to Home
+          </button>
+
           <div className="flex flex-col items-center justify-center text-center max-w-md z-10">
             <div className="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
               <Book size={40} />
@@ -539,27 +546,34 @@ function App() {
       )}
 
       {activeTab === "new-game" && (
-        <NewGameTab onStartGame={startNewGame} />
+        <NewGameTab onStartGame={startNewGame} onBack={() => setActiveTab("play")} />
       )}
 
       {activeTab === "database" && (
-        <DatabaseTab profiles={profiles} />
+        <DatabaseTab profiles={profiles} onBack={() => setActiveTab("play")} />
       )}
 
       {activeTab === "engines" && (
-        <EnginesTab />
+        <EnginesTab onBack={() => setActiveTab("play")} />
       )}
 
       {activeTab === "users" && (
         <UsersTab
           profiles={profiles}
           onAddProfile={(profile) => setProfiles(prev => [...prev, { ...profile, id: Date.now().toString() }])}
+          onBack={() => setActiveTab("play")}
         />
       )}
 
       {activeTab === "settings" && (
         <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
           <div className="w-full max-w-5xl flex flex-col gap-6 z-10">
+            <button 
+                onClick={() => setActiveTab("play")} 
+                className="self-start flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white mb-2 transition-colors"
+            >
+                <ChevronLeft size={16} /> Back to Home
+            </button>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Settings</h1>

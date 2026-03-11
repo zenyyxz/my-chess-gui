@@ -32,7 +32,19 @@ pub fn start_engine(app: AppHandle, state: State<'_, EngineState>, path: String)
     }
     *stdin_guard = None;
 
-    let mut command = Command::new(&path);
+    let mut engine_path = PathBuf::from(&path);
+    
+    // If the path doesn't exist, try resolving it from the App Data engines directory
+    if !engine_path.exists() {
+        if let Ok(app_data_dir) = app.path().app_local_data_dir() {
+            let target_exe = app_data_dir.join("engines").join(format!("{}.exe", path));
+            if target_exe.exists() {
+                engine_path = target_exe;
+            }
+        }
+    }
+
+    let mut command = Command::new(&engine_path);
     command.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
 
     #[cfg(target_os = "windows")]
@@ -105,8 +117,9 @@ pub async fn download_engine(app: AppHandle, name: String, url: String) -> Resul
         fs::create_dir_all(&engines_dir).map_err(|e| format!("Failed to create engines directory: {}", e))?;
     }
 
-    // 2. Download the file
+    // 2. Download the file as a zip
     let download_path = engines_dir.join(format!("{}.zip", name));
+    let final_exe_path = engines_dir.join(format!("{}.exe", name));
     
     // Emit starting download event
     let _ = app.emit("download-progress", format!("Starting download for {}...", name));
@@ -127,59 +140,66 @@ pub async fn download_engine(app: AppHandle, name: String, url: String) -> Resul
         let chunk = chunk.map_err(|e| format!("Error reading chunk: {}", e))?;
         file.write_all(&chunk).map_err(|e| format!("Error writing file: {}", e))?;
         downloaded += chunk.len() as u64;
-        
-        if total_size > 0 {
-            // Optional: emit precise progress here if needed
-            // let progress = (downloaded as f64 / total_size as f64) * 100.0;
-        }
     }
 
-    let _ = app.emit("download-progress", format!("Download complete. Extracting {}...", name));
+    let _ = app.emit("download-progress", format!("Download complete. Extracting executable..."));
 
-    // 3. Extract the zip file
+    // 3. Extract ONLY the .exe file from the zip archive
     let file = fs::File::open(&download_path).map_err(|e| format!("Failed to open downloaded zip: {}", e))?;
     let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Failed to read zip archive: {}", e))?;
 
-    let extract_dir = engines_dir.join(&name);
-    if !extract_dir.exists() {
-        fs::create_dir_all(&extract_dir).map_err(|e| format!("Failed to create extract directory: {}", e))?;
-    }
-
+    let mut found_exe = false;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| format!("Failed to access file in zip: {}", e))?;
-        let outpath = match file.enclosed_name() {
-            Some(path) => extract_dir.join(path),
-            None => continue,
-        };
-
-        if (*file.name()).ends_with('/') {
-            fs::create_dir_all(&outpath).map_err(|e| format!("Failed to create directory in zip extraction: {}", e))?;
-        } else {
-            if let Some(p) = outpath.parent() {
-                if !PathBuf::from(p).exists() {
-                    fs::create_dir_all(p).map_err(|e| format!("Failed to create parent directory during extraction: {}", e))?;
-                }
-            }
-            let mut outfile = fs::File::create(&outpath).map_err(|e| format!("Failed to create extracted file: {}", e))?;
+        
+        if file.name().ends_with(".exe") {
+            let mut outfile = fs::File::create(&final_exe_path).map_err(|e| format!("Failed to create extracted file: {}", e))?;
             std::io::copy(&mut file, &mut outfile).map_err(|e| format!("Failed to copy extracted file content: {}", e))?;
-        }
-
-        // Apply executable permissions on Unix systems
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if let Ok(metadata) = fs::metadata(&outpath) {
-                let mut perms = metadata.permissions();
-                perms.set_mode(0o755);
-                let _ = fs::set_permissions(&outpath, perms);
-            }
+            found_exe = true;
+            break;
         }
     }
 
-    // 4. Clean up the zip file
+    // Apply executable permissions on Unix systems just in case (though the extension is .exe)
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(metadata) = fs::metadata(&final_exe_path) {
+            let mut perms = metadata.permissions();
+            perms.set_mode(0o755);
+            let _ = fs::set_permissions(&final_exe_path, perms);
+        }
+    }
+
+    // Clean up the ZIP
     let _ = fs::remove_file(&download_path);
 
-    let _ = app.emit("download-progress", format!("Successfully extracted {}.", name));
+    if !found_exe {
+        return Err("No .exe file found inside the downloaded archive.".into());
+    }
 
-    Ok(extract_dir.to_string_lossy().into_owned())
+    let _ = app.emit("download-progress", format!("Successfully installed {}.", name));
+
+    Ok(final_exe_path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub fn check_engine_exists(app: AppHandle, name: String) -> Result<bool, String> {
+    if let Ok(app_data_dir) = app.path().app_local_data_dir() {
+        let engine_exe = app_data_dir.join("engines").join(format!("{}.exe", name));
+        Ok(engine_exe.exists())
+    } else {
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+pub fn remove_engine(app: AppHandle, name: String) -> Result<(), String> {
+    if let Ok(app_data_dir) = app.path().app_local_data_dir() {
+        let engine_exe = app_data_dir.join("engines").join(format!("{}.exe", name));
+        if engine_exe.exists() {
+            fs::remove_file(engine_exe).map_err(|e| format!("Failed to remove engine: {}", e))?;
+        }
+    }
+    Ok(())
 }
